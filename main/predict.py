@@ -5,8 +5,8 @@ import requests
 from sklearn.preprocessing import MinMaxScaler
 import numpy as np
 
-fnn_model_path = '..\\deep_nn_model.keras'
-lstm_model_path = '..\\lstm.keras'
+fnn_model_path = '../simple_models/deep_nn_model.keras'
+lstm_model_path = '../simple_models/lstm.keras'
 window_size = 9
 file_path = '..\\dataset\\kyiv-weather.csv'
 column_name = 'cloud_cover (%)'

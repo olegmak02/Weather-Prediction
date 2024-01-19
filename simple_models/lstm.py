@@ -9,9 +9,10 @@ from sklearn.metrics import mean_squared_error
 from sklearn.preprocessing import MinMaxScaler
 from tensorflow.keras.layers import Dense
 from tensorflow.keras.models import Sequential
+from tensorflow.keras.layers import LSTM
 
-file_path = '.\\dataset\\weather_kyiv.csv'
-model_path = 'deep_nn_model.keras'
+file_path = '../dataset/weather_kyiv.csv'
+model_path = 'lstm.keras'
 window_size = 9
 
 df = pd.read_csv(file_path, sep=',', parse_dates=['date'])
@@ -45,15 +46,17 @@ y_train = scaler_y.fit_transform(np.array(y_train).reshape(-1, 1))
 
 if not os.path.exists(model_path):
     model = Sequential()
-    model.add(Dense(window_size, input_dim=window_size, activation='relu'))
-    model.add(Dense(16, activation='relu'))
-    model.add(Dense(16, activation='relu'))
-    model.add(Dense(8, activation='relu'))
-    model.add(Dense(5, activation='relu'))
+    model.add(LSTM(units=50, activation='relu', return_sequences=True, input_shape=(window_size, 1)))
+    model.add(LSTM(units=50, activation='relu', return_sequences=True))
+    model.add(LSTM(16, activation='relu', return_sequences=True))
+    model.add(LSTM(16, activation='relu', return_sequences=True))
+    model.add(LSTM(16, activation='relu', return_sequences=True))
+    model.add(LSTM(8, activation='relu', return_sequences=True))
+    model.add(LSTM(5, activation='relu', return_sequences=True))
     model.add(Dense(1, activation='linear'))
     model.compile(optimizer='adam', loss='mean_squared_error')
 
-    model.fit(X_train, y_train, epochs=20, batch_size=10, verbose=1)
+    model.fit(X_train, y_train, epochs=15, batch_size=10, verbose=1)
     model.save(model_path)
 else:
     model = keras.models.load_model(model_path)
@@ -64,15 +67,15 @@ def nn_rolling_predictions(data):
     predictions = []
 
     for start in range(len(data)-window_size):
-        pred = model.predict(scaler_X.transform(np.array([data[column_name][start:start+window_size].values])).reshape(-1, window_size))
-        pred = scaler_y.inverse_transform(pred)[0, 0]
+        d = scaler_X.transform(np.array([data[column_name][start:start + window_size].values])).reshape(-1, window_size)
+        pred = model.predict(d)
+        pred = scaler_y.inverse_transform([[pred[0,window_size-1,0]]])[0, 0]
         predictions.append(pred)
     return predictions
 
 forecast_steps = test_size-window_size
 
 predictions = nn_rolling_predictions(df_filled[test_index:test_index+test_size])
-
 actual_values = df_filled[test_index:test_index+test_size][column_name].iloc[-forecast_steps:]
 mse = mean_squared_error(actual_values, predictions)
 print(f"Mean Squared Error (MSE): {mse}")

@@ -8,8 +8,8 @@ from sklearn.metrics import mean_squared_error
 from sklearn.preprocessing import MinMaxScaler
 
 file_path = '..\\dataset\\weather_kyiv.csv'
-fnn_model_path = '..\\deep_nn_model.keras'
-lstm_model_path = '..\\lstm.keras'
+fnn_model_path = '../simple_models/deep_nn_model.keras'
+lstm_model_path = '../simple_models/lstm.keras'
 window_size = 9
 
 df = pd.read_csv(file_path, sep=',', parse_dates=['date'])

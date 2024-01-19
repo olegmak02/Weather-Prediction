@@ -11,7 +11,7 @@ from tensorflow.keras.layers import Dense
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import GRU
 
-file_path = '.\\dataset\\weather_kyiv.csv'
+file_path = '../dataset/weather_kyiv.csv'
 model_path = 'gru.keras'
 window_size = 9
 
