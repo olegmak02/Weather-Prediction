@@ -1,6 +1,7 @@
 import math
 import os
 
+import joblib
 import keras
 import matplotlib.pyplot as plt
 import numpy as np
@@ -29,7 +30,6 @@ if math.isnan(df_filled[column_name][0]):
     df_filled[column_name][0] = df_filled[column_name][1]
 
 df_filled = df_filled[33606:]
-print(df_filled)
 test_index = round(df_filled.values.shape[0] * 0.8)
 
 train_data = df_filled[column_name][0:test_index].values
@@ -46,6 +46,8 @@ scaler_y = MinMaxScaler()
 
 X_train = scaler_X.fit_transform(np.array(X_train)).reshape(-1, window_size)
 y_train = scaler_y.fit_transform(np.array(y_train).reshape(-1, 1))
+
+joblib.dump(scaler_X, '..\\scalers\\snow.pkl')
 
 if not os.path.exists(model_path):
     model = Sequential()
@@ -87,8 +89,8 @@ print(f"Mean Squared Error (MSE): {mse}")
 plt.plot(df_filled[test_index:test_index+test_size].index, df_filled[test_index:test_index+test_size][column_name], label='Actual')
 plt.plot(actual_values.index, predictions, label='Predicted', color='red')
 plt.xlabel('Date')
-plt.ylabel('Temperature')
-plt.title('Neural Network Rolling Predictions')
+plt.ylabel('Snow Depth')
+plt.title('Neural Network Snow Depth Predictions')
 plt.legend()
 plt.show()
 

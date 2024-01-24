@@ -1,4 +1,5 @@
 import os
+import joblib
 
 import keras
 import matplotlib.pyplot as plt
@@ -20,9 +21,9 @@ df = pd.read_csv(file_path)
 df = df[column_name][30207:] / 100.0
 df_daily = []
 for i in range(0, len(df), 24):
-        window = df[i:i + window_size]
-        average = sum(window) / len(window)
-        df_daily.append(average)
+    window = df[i:i + window_size]
+    average = sum(window) / len(window)
+    df_daily.append(average)
 df = df_daily
 
 test_index = round(len(df) * 0.8)
@@ -42,6 +43,8 @@ scaler_y = MinMaxScaler()
 
 X_train = scaler_X.fit_transform(np.array(X_train)).reshape(-1, window_size)
 y_train = scaler_y.fit_transform(np.array(y_train).reshape(-1, 1))
+
+joblib.dump(scaler_X, '..\\scalers\\cloudcover.pkl')
 
 if not os.path.exists(model_path):
     model = Sequential()
@@ -73,13 +76,10 @@ actual_values = df[test_index:test_index+test_size][-forecast_steps:]
 mse = mean_squared_error(actual_values, predictions)
 print(f"Mean Squared Error (MSE): {mse}")
 i = df[test_index:test_index+test_size].index
-print(df[test_index:test_index+test_size].index)
-print(df[test_index:test_index+test_size])
-#plt.plot(df[test_index:test_index+test_size].index, df[test_index:test_index+test_size], label='Actual')
 plt.plot(range(test_index, test_index+test_size), df[test_index:test_index+test_size], label='Actual')
 plt.plot(range(test_index+window_size, test_index+test_size), predictions, label='Predicted', color='red')
 plt.xlabel('Date')
-plt.ylabel('Temperature')
-plt.title('Neural Network Rolling Predictions')
+plt.ylabel('Cloudcover')
+plt.title('Neural Network Cloudcover Predictions')
 plt.legend()
 plt.show()

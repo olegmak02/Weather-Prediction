@@ -1,6 +1,7 @@
 import math
 import os
 
+import joblib
 import keras
 import matplotlib.pyplot as plt
 import numpy as np
@@ -50,6 +51,8 @@ scaler_y = MinMaxScaler()
 X_train = scaler_X.fit_transform(np.array(X_train)).reshape(-1, window_size)
 y_train = scaler_y.fit_transform(np.array(y_train).reshape(-1, 1))
 
+joblib.dump(scaler_X, '..\\scalers\\precip.pkl')
+
 if not os.path.exists(model_path):
     model = Sequential()
     model.add(GRU(units=50, activation='relu', return_sequences=True, input_shape=(window_size, 1)))
@@ -77,15 +80,10 @@ def nn_rolling_predictions(data):
             acc = acc + set[ind]
             set[ind] = acc
         d = scaler_X.transform(np.array([set])).reshape(-1, window_size)
-        print('set=')
-        print(set)
         pred = model.predict(d)
         pred = scaler_y.inverse_transform([[pred[0,window_size-1,0]]])[0, 0] - set_sum
-        print('pred=')
-        print(pred)
         if pred < 0:
             pred = 0
-        #pred = scaler_y.inverse_transform([[pred[0,window_size-1,0]]])[0, 0]
         predictions.append(pred)
     return predictions
 
@@ -99,7 +97,7 @@ print(f"Mean Squared Error (MSE): {mse}")
 plt.plot(df_filled[test_index:test_index+test_size].index, df_filled[test_index:test_index+test_size][column_name], label='Actual')
 plt.plot(actual_values.index, predictions, label='Predicted', color='red')
 plt.xlabel('Date')
-plt.ylabel('Temperature')
-plt.title('Neural Network Rolling Predictions')
+plt.ylabel('Precipitation')
+plt.title('Neural Network Precipitation Predictions')
 plt.legend()
 plt.show()

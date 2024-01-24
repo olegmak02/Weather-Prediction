@@ -1,6 +1,7 @@
 import math
 import os
 
+import joblib
 import keras
 import matplotlib.pyplot as plt
 import numpy as np
@@ -43,6 +44,8 @@ scaler_y = MinMaxScaler()
 
 X_train = scaler_X.fit_transform(np.array(X_train)).reshape(-1, window_size)
 y_train = scaler_y.fit_transform(np.array(y_train).reshape(-1, 1))
+
+joblib.dump(scaler_X, '..\\scalers\\temperature.pkl')
 
 if not os.path.exists(model_path):
     model = Sequential()

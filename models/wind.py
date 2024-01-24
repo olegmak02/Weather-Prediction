@@ -1,4 +1,6 @@
 import os
+
+import joblib
 import keras
 import matplotlib.pyplot as plt
 import numpy as np
@@ -36,6 +38,8 @@ scaler_y = MinMaxScaler()
 X_train = scaler_X.fit_transform(np.array(X_train)).reshape(-1, window_size)
 y_train = scaler_y.fit_transform(np.array(y_train).reshape(-1, 1))
 
+joblib.dump(scaler_X, '..\\scalers\\wind.pkl')
+
 if not os.path.exists(model_path):
     model = Sequential()
     model.add(GRU(units=20, activation='relu', return_sequences=True, input_shape=(window_size, 1)))
@@ -58,11 +62,8 @@ def nn_rolling_predictions(data):
 
     for start in range(len(data)-window_size):
         d = scaler_X.transform(np.array([data[start:start + window_size].values])).reshape(-1, window_size)
-        #print('d=')
-        #print(data[start:start + window_size].values)
         pred = model.predict(d)
         pred = scaler_y.inverse_transform([[pred[0,window_size-1,0]]])[0, 0]
-        #print(pred)
         predictions.append(pred)
     return predictions
 
@@ -76,7 +77,7 @@ print(f"Mean Squared Error (MSE): {mse}")
 plt.plot(df[test_index:test_index+test_size].index, df[test_index:test_index+test_size], label='Actual')
 plt.plot(actual_values.index, predictions, label='Predicted', color='red')
 plt.xlabel('Date')
-plt.ylabel('Temperature')
-plt.title('Neural Network Rolling Predictions')
+plt.ylabel('Wind Speed')
+plt.title('Neural Network Wind Speed Predictions')
 plt.legend()
 plt.show()
