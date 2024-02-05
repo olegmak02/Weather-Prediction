@@ -1,19 +1,20 @@
 import math
 import os
+import time
 
-import joblib
 import keras
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+from keras.src.layers import Bidirectional, Dropout
 from sklearn.metrics import mean_squared_error
 from sklearn.preprocessing import MinMaxScaler
 from tensorflow.keras.layers import Dense
 from tensorflow.keras.models import Sequential
-from tensorflow.keras.layers import GRU
+from tensorflow.keras.layers import LSTM
 
-file_path = '../dataset/weather_kyiv.csv'
-model_path = 'gru.keras'
+file_path = '../../dataset/weather_kyiv.csv'
+model_path = 'bidirectional_lstm.keras'
 window_size = 9
 
 df = pd.read_csv(file_path, sep=',', parse_dates=['date'])
@@ -42,22 +43,22 @@ for group_index in range(int(len(train_data)-window_size)):
 scaler_X = MinMaxScaler()
 scaler_y = MinMaxScaler()
 
-X_train = scaler_X.fit_transform(np.array(X_train)).reshape(-1, window_size)
+X_train = scaler_X.fit_transform(np.array(X_train)).reshape(-1, window_size, 1)
 y_train = scaler_y.fit_transform(np.array(y_train).reshape(-1, 1))
-
-joblib.dump(scaler_X, '..\\scalers\\temperature.pkl')
 
 if not os.path.exists(model_path):
     model = Sequential()
-    model.add(GRU(units=26, activation='relu', return_sequences=True, input_shape=(window_size, 1)))
-    model.add(GRU(units=20, activation='relu', return_sequences=True))
-    model.add(GRU(16, activation='relu', return_sequences=True))
-    model.add(GRU(8, activation='relu', return_sequences=True))
-    model.add(GRU(5, activation='relu', return_sequences=True))
+    model.add(Bidirectional(LSTM(units=50, activation='relu', return_sequences=True, input_shape=(window_size, 1))))
+    model.add(Bidirectional(LSTM(16, activation='relu', return_sequences=True)))
+    model.add(Dropout(0.2))
+    model.add(Bidirectional(LSTM(16, activation='relu', return_sequences=True)))
+    model.add(Dropout(0.2))
+    model.add(Bidirectional(LSTM(8, activation='relu', return_sequences=True)))
+    model.add(Bidirectional(LSTM(5, activation='relu', return_sequences=True)))
     model.add(Dense(1, activation='linear'))
     model.compile(optimizer='adam', loss='mean_squared_error')
 
-    model.fit(X_train, y_train, epochs=6, batch_size=10, verbose=1)
+    model.fit(X_train, y_train, epochs=15, batch_size=10, verbose=1)
     model.save(model_path)
 else:
     model = keras.models.load_model(model_path)
@@ -75,16 +76,19 @@ def nn_rolling_predictions(data):
     return predictions
 
 forecast_steps = test_size-window_size
-
+start_time = time.time()
 predictions = nn_rolling_predictions(df_filled[test_index:test_index+test_size])
+end_time = time.time()
+calculation_time = end_time - start_time
+print("Calculation time: " + str(calculation_time))
 actual_values = df_filled[test_index:test_index+test_size][column_name].iloc[-forecast_steps:]
 mse = mean_squared_error(actual_values, predictions)
 print(f"Mean Squared Error (MSE): {mse}")
 
 plt.plot(df_filled[test_index:test_index+test_size].index, df_filled[test_index:test_index+test_size][column_name], label='Actual')
 plt.plot(actual_values.index, predictions, label='Predicted', color='red')
-plt.xlabel('Date')
+plt.xlabel('Days')
 plt.ylabel('Temperature')
-plt.title('Neural Network Rolling Predictions')
+plt.title('Bidirectional LSTM with Dropout Predictions')
 plt.legend()
 plt.show()

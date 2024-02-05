@@ -1,5 +1,6 @@
 import math
 import os
+import time
 
 import keras
 import matplotlib.pyplot as plt
@@ -11,7 +12,7 @@ from tensorflow.keras.layers import Dense
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import LSTM
 
-file_path = '../dataset/weather_kyiv.csv'
+file_path = '../../dataset/weather_kyiv.csv'
 model_path = 'lstm.keras'
 window_size = 9
 
@@ -74,16 +75,19 @@ def nn_rolling_predictions(data):
     return predictions
 
 forecast_steps = test_size-window_size
-
+start_time = time.time()
 predictions = nn_rolling_predictions(df_filled[test_index:test_index+test_size])
+end_time = time.time()
+calculation_time = end_time - start_time
+print("Calculation time: " + str(calculation_time))
 actual_values = df_filled[test_index:test_index+test_size][column_name].iloc[-forecast_steps:]
 mse = mean_squared_error(actual_values, predictions)
 print(f"Mean Squared Error (MSE): {mse}")
 
 plt.plot(df_filled[test_index:test_index+test_size].index, df_filled[test_index:test_index+test_size][column_name], label='Actual')
 plt.plot(actual_values.index, predictions, label='Predicted', color='red')
-plt.xlabel('Date')
+plt.xlabel('Days')
 plt.ylabel('Temperature')
-plt.title('Neural Network Rolling Predictions')
+plt.title('LSTM Predictions')
 plt.legend()
 plt.show()
